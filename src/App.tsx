@@ -4,9 +4,19 @@ import viteLogo from '/vite.svg'
 import imageRickAndMorty from './img/rick-morty.png'
 import './App.css'
 
+
 function App() {
-  const reqApi = () => {
-    console.log('click')
+  const [characters, setCharacters] = useState(null);
+
+  const reqApi = async() => {
+    const api =  await fetch('https://rickandmortyapi.com/api/character')
+    const characterApi = await api.json();
+
+    
+    setCharacters(characterApi)
+
+
+    console.log(characters);
   }
 
   return (
