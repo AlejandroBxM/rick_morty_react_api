@@ -1,7 +1,8 @@
 # This is a basic workflow to help you get started with Actions
 name: CI
 # Controls when the workflow will run
-on: [push,workflow_dispatch]  # Triggers the workflow on push or pull request events but only for the "main" branch
+on:
+  [push, workflow_dispatch] # Triggers the workflow on push or pull request events but only for the "main" branch
   # Allows you to run this workflow manually from the Actions tab
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -15,8 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-    # Steps represent a sequence of tasks that will be executed as part of the job
-   
+      # Steps represent a sequence of tasks that will be executed as part of the job
+
       # Runs a single command using the runners shell
       - name: Run a one-line script
         run: echo Hello, world!
@@ -34,29 +35,44 @@ jobs:
       - name: install NodeJs
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
       - name: install dependencies
         run: npm ci
+      - name: lint code
+        run: npm run lint
       - name: run tests
-        run: npm test
+        run: npm run test
+  build:
+      needs: test #se pueden encerrar varios jobs en  []
+      runs-on: ubuntu-latest
+      steps:
+        - name: get code
+          uses: actions/checkout@v3
+        - name: install dependencies
+          run: npm ci
+        - name: Build project
+          run: npm run build
+        - name: upload artifacts
+          uses: actions/upload-artifact@v3
+          with:
+            name: dist-files
+            path: | 
+              dist
+              package.json
+
   deploy:
     needs: test #se pueden encerrar varios jobs en []
     runs-on: ubuntu-latest
-    steps:      
+    steps:
       - name: get code
         uses: actions/checkout@v3
       - name: install NodeJs
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
       - name: install dependencies
         run: npm ci
       - name: Build project
         run: npm run build
       - name: Deploy
-        run: echo "Deploying to production server..."  
-        
-        
-
-
-
+        run: echo "Deploying to production server..."
