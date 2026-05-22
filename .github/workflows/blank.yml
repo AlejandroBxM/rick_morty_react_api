@@ -30,8 +30,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: get code
         uses: actions/checkout@v3
+      - name: Cache
+        uses: actions/cache@v3
       - name: install NodeJs
         uses: actions/setup-node@v3
         with:
@@ -45,13 +47,18 @@ jobs:
   build:
       needs: test #se pueden encerrar varios jobs en  []
       runs-on: ubuntu-latest
+      outputs:
+         script-file: ${{ steps.publish.outputs.script-file }}
       steps:
         - name: get code
           uses: actions/checkout@v3
         - name: install dependencies
           run: npm ci
-        - name: Build project
+        - name: Build website
           run: npm run build
+        - name: publish JS filename
+          id: publish
+          run: find dist/assets/*.js -type f -execdir echo "::set-output name=script-file::{}" >> $GITHUB_OUTPUT ';'  
         - name: upload artifacts
           uses: actions/upload-artifact@v3
           with:
@@ -59,17 +66,22 @@ jobs:
             path: | 
               dist
               package.json
-
   deploy:
-    needs: test #se pueden encerrar varios jobs en []
+    needs: [test, build] #se pueden encerrar varios jobs en []
     runs-on: ubuntu-latest
     steps:
-      - name: get code
-        uses: actions/checkout@v3
+      - name: get build artifacts 
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-files
+      - name: output contents
+        run: ls -R      
+      - name: output contents
+        run: echo "${{ needs.build.outputs.script-file}}"  
       - name: install NodeJs
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "22"
       - name: install dependencies
         run: npm ci
       - name: Build project
